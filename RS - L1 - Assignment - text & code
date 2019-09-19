@@ -1,3 +1,19 @@
+Thinking1：既然内容相似度计算简单，能频繁更新，为什么还需要协同过滤算法呢？
+Re: 基于内容标签或者内容相似度的计算推荐有自身的局限性。
+1. 内容标签的设计一般基于人为判断，从数据上看充斥噪音
+2. 内容标签特征值一般仅仅反映内容本身的特征，维度上非常受限，难以捕捉到内容和受众间的潜在联系
+3. 协同过滤算法能够突破上述这些限制，基于用户行为数据本身找到客观规律，从结果上扩展标签，提升分析维度，提高分类和相关性分析的准确度
+4. 当然用协同过滤算法会要求数量和质量更高的数据，有时难以直接在冷启动阶段予以应用
+
+Thinking2：你需要推荐系统么？哪些情况下不需要推荐系统？
+Re：我认为推荐系统应用的条件前提是diversity。如果产品组合或者产品TA比较单一，肯定没必要再做千人千面的推荐。
+    但绝大多数情况下，基于企业或者产品发展阶段的不同，或多或少需要推荐系统来优化分发和推广。
+
+Thinking3：如果给一个视频打标签，视频中有音乐作为背景音乐，采用了NLP方式对内容自动打标签，可能存在什么问题？
+Re：背景音乐的特征不足以全面反映视频内容的特征。以抖音为例，UGC内容的创意无限，但平台提供的BGM有限，用有限的BGM输出特征来增加内容特征维度，
+    会生成噪音，影响分类和预测结果。
+
+Action：使用CART算法对MNIST进行训练：
 # -*- coding: utf-8 -*-
 # 使用CART和其他黑盒模型进行MNIST手写数字分类
 from sklearn.model_selection import train_test_split
@@ -46,6 +62,7 @@ ss = preprocessing.StandardScaler()
 train_ss_x = ss.fit_transform(train_x)
 test_ss_x = ss.transform(test_x)
 
+# 生成模型字典
 model ={
     'MLP': MLPClassifier(),
     'KNC': KNeighborsClassifier(),
@@ -61,16 +78,19 @@ model ={
 
 }
 
+# 用循环调用模型进行预测，将输出值append到空的list中
 prediction_accuracy = []
 for value in model.values():
     value.fit(train_ss_x, train_y)
     predict_y_new = value.predict(test_ss_x)
     prediction_accuracy.append(accuracy_score(predict_y_new, test_y))
-    
+
+# 将预测结果转换为numpy表
 model_prediction = np.hstack(prediction_accuracy)
-#加入list将dict_keys转换为列表，否则会在后续画图中报错
+# 加入list将dict_keys转换为列表，否则会在后续画图中报错
 model_name = np.hstack((list(model.keys())))
 
+# 可视化不同模型的预测准确度
 fig = plt.figure(figsize=(8,4))
 
 sns.barplot(model_prediction, model_name, palette='Blues_d')
